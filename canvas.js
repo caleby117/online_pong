@@ -1,0 +1,5 @@
+var CANV_WIDTH = 1280;
+var CANV_HEIGHT = 720
+
+module.exports.CANV_HEIGHT = CANV_HEIGHT
+module.exports.CANV_WIDTH = CANV_WIDTH

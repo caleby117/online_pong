@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Caleby's online pong</title>
+</head>
+<body>
+<canvas id = 'ctx' width="1280" height="720" style="border:2px solid #000000"></canvas>
+<h1 id="para"></h1>
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js"></script>
+    <script>
+        var CANV_WIDTH = 1280
+        var CANV_HEIGHT = 720
+
+        var socket = io()
+        var ctx = document.getElementById('ctx').getContext("2d")
+        ctx.font = '50px Arial'
+        ctx.fillText('Press any key to begin', 200, 400)
+
+        var scores = {p1:0, p2:0}
+
+        var drawPlayer = function(x, y){
+            ctx.fillRect(x-CANV_WIDTH/200, y-CANV_HEIGHT/20, CANV_WIDTH/100, CANV_HEIGHT/10)
+        }
+
+
+        var drawBall = function(x, y, r){
+            ctx.strokeStyle = '#FF0000'
+            ctx.fillStyle = '#FF0000'
+            ctx.beginPath()
+            ctx.arc(x, y, r, 0, 2*Math.PI)
+            ctx.stroke()
+            ctx.fill()
+        }
+
+
+        var countdown = function(){
+
+            var s = 3
+            var intervalID = setInterval(function(){
+
+                ctx.clearRect(CANV_WIDTH/8, CANV_HEIGHT/8, 3*CANV_WIDTH/4, 3*CANV_HEIGHT/4)
+                // ctx.fillStyle = '#00FF00'
+                // ctx.fillRect(CANV_WIDTH/8, CANV_HEIGHT/8, 100, 100)
+                ctx.fillText(s.toString(), CANV_WIDTH/2, CANV_HEIGHT/2)
+                s -= 1
+                if(s === -1){
+                    ctx.clearRect(CANV_WIDTH/8, CANV_HEIGHT/8, 3*CANV_WIDTH/4, 3*CANV_HEIGHT/4)
+                    clearInterval(intervalID)
+                }
+
+            }, 1000)
+        }
+
+        var drawAll = function(data) {
+            ctx.clearRect(0, 0, CANV_WIDTH, CANV_HEIGHT)
+            for (var p in data.playerSprites) {
+                var sprite = data.playerSprites[p]
+                drawPlayer(sprite.x, sprite.y)
+            }
+            drawBall(data.ball.x, data.ball.y, data.ball.r)
+            ctx.font = '30px Arial'
+            ctx.fillText(scores.p1.toString(), 3*CANV_WIDTH/8, 50)
+            ctx.fillText(scores.p2.toString(), 5*CANV_WIDTH/8, 50)
+
+        }
+
+        var updateScore = function(data){
+            document.getElementById('para').innerHTML = "Goal!"
+            switch(data.no.toString()){
+                case '1':
+                    scores.p1 = data.score
+                    break
+
+                case '2':
+                    scores.p2 = data.score
+                    break
+            }
+        }
+
+        socket.on('draw', function(data){
+            drawAll(data)
+        })
+
+        socket.on('countdown', function(data){
+            countdown()
+        })
+
+        socket.on('updateScore', function(data){
+            console.log(data)
+            updateScore(data)
+
+        })
+
+        document.onkeydown = function(event) {
+            socket.emit('keyDown', {code: event.code})
+        }
+
+        document.onkeyup = function(event) {
+            socket.emit('keyUp', {code: event.code})
+        }
+    </script>
+
+</body>
+</html>
